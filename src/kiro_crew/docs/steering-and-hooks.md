@@ -260,6 +260,43 @@ by command and matcher. A command must be an absolute path to an existing file
 outside sensitive locations, and only `command` and `matcher` are kept — extra
 keys are stripped.
 
+`kiro_hooks` also accepts the array of hook documents a kiro-agent profile uses,
+so a spec written for either tool loads here:
+
+```json
+{"agent": {"kiro_hooks": [
+  {"name": "guard", "trigger": "PreToolUse", "matcher": "*",
+   "action": {"type": "command", "command": "/path/to/hook.sh"}}
+]}}
+```
+
+Both shapes are held to the same bar: same command and matcher rules, same
+dedup, same per-event and total caps. Twelve triggers are accepted, each in
+kiro-agent's own PascalCase, its IDE camelCase spelling, or its CLI alias —
+the whole table from kiro-agent's `packages/kiro-agent/src/hooks/trigger-names.ts` at blob `2d4a3127e32e5e81e68d5c2ea406a6a5728f6d78`, matched without regard to case. Five map onto the five kiro-cli event
+names: `PreToolUse` to `preToolUse`, `PostToolUse` to `postToolUse`,
+`UserPromptSubmit` to `userPromptSubmit`, `SessionStart` to `agentSpawn`, `Stop`
+to `stop`. Only those five reach kiro-cli; a hook on `SessionEnd`, `PreTaskExec`,
+`PostTaskExec`, `PostFileCreate`, `PostFileSave`, `PostFileDelete` or `Manual`
+stays in your config and does not run there. An `action` of type `agent` has no
+kiro-cli slot either, so it does not run there. Same for the per-hook `name`,
+`description` and `timeout`: kiro-cli is handed the command and the matcher, and
+the rest stays in your config.
+
+`enabled` and `confirm` are the two that change what runs, so they are not
+dropped. `enabled: false` means the hook is off, and `confirm: true` asks you
+first — a kiro-cli hook cannot ask. Either one keeps the hook out of the kiro-cli
+spec entirely, rather than handing over a command that runs unconditionally, and
+it says which in the log and in the security event log.
+
+Off stays off through autoimport too. A script under `~/.kiro/hooks` is normally
+picked up on its own, so a hook you switched off by naming that script would come
+back as a fresh discovery on autoimport's default event. The script named by a
+hook you switched off is left out of that scan.
+
+The standalone hook-file wrapper `{"version": "v1", "hooks": [...]}` is a file
+format, not a spec value, and is rejected.
+
 ## `register_hook` is a different thing
 
 The `register_hook` MCP tool is **not** a lifecycle hook, despite the name. It
