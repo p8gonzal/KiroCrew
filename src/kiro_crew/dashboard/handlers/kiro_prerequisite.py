@@ -9,6 +9,8 @@ from typing import Any
 
 from aiohttp import web
 
+from kiro_crew.acp_backends import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
+from kiro_crew.config.loader import KiroCrewConfig
 from kiro_crew.dashboard.handlers.source_providers import is_owner_dashboard_request
 from kiro_crew.kiro_prerequisite import (
     KIRO_CLI_LOGIN_COMMAND,
@@ -107,6 +109,21 @@ async def _dashboard_owner_only(request: web.Request) -> web.Response | None:
     return web.json_response({"error": "dashboard owner required"}, status=403)
 
 
+#: The harnesses that launch through kiro-cli. Only these need the Kiro CLI
+#: install/sign-in gate; any other selected backend brings its own binary.
+_KIRO_CLI_HARNESSES = frozenset({ACP_BACKEND_KIRO, ACP_BACKEND_KAS})
+
+
+async def _kiro_cli_harness_selected() -> bool:
+    """True when the configured backend runs on kiro-cli (or config is unreadable)."""
+    try:
+        cfg = await asyncio.to_thread(KiroCrewConfig.load)
+    except Exception:
+        logger.debug("Could not read acp_backend; keeping the Kiro CLI gate", exc_info=True)
+        return True
+    return cfg.agent.acp_backend in _KIRO_CLI_HARNESSES
+
+
 async def api_kiro_prerequisite_status(request: web.Request) -> web.Response:
     """GET /api/kiro-prerequisite — current install/login readiness.
 
@@ -155,6 +172,10 @@ async def api_kiro_prerequisite_status(request: web.Request) -> web.Response:
             bool(service.initial_setup_complete),
             probe_error=f"{type(exc).__name__}: {exc}"[:400],
         )
+    # A backend that does not run on kiro-cli has nothing for this gate to set
+    # up, so report it ready and let the dashboard through.
+    if not await _kiro_cli_harness_selected():
+        snapshot = {**snapshot, "ready": True, "initial_setup_complete": True}
     if _is_dashboard_owner(request):
         return web.json_response({**snapshot, "setup_allowed": True})
 
