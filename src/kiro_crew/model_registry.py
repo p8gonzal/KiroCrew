@@ -64,6 +64,20 @@ MODEL_ID_LITERAL_PATTERN = (
 _FALLBACK_CANONICAL = "opus-4.8-1m"
 _FALLBACK_PROVIDER_ID = "global.anthropic.claude-opus-4-8[1m]"
 _FALLBACK_PROVIDER_IDS: dict[str, str] = {
+    "fable-5.1-1m": "claude-fable-5-1[1m]",
+    "fable-5.1": "claude-fable-5-1[1m]",
+    "claude-fable-5.1": "claude-fable-5-1[1m]",
+    "claude-fable-5-1": "claude-fable-5-1[1m]",
+    "claude-fable-5-1[1m]": "claude-fable-5-1[1m]",
+    "opus-5.5-1m": "claude-opus-5-5[1m]",
+    "opus-5.5": "claude-opus-5-5[1m]",
+    "claude-opus-5.5": "claude-opus-5-5[1m]",
+    "claude-opus-5-5": "claude-opus-5-5[1m]",
+    "claude-opus-5-5[1m]": "claude-opus-5-5[1m]",
+    "sonnet-5-1m": "claude-sonnet-5[1m]",
+    "sonnet-5": "claude-sonnet-5[1m]",
+    "claude-sonnet-5": "claude-sonnet-5[1m]",
+    "claude-sonnet-5[1m]": "claude-sonnet-5[1m]",
     "fable-5-1m": "global.anthropic.claude-fable-5[1m]",
     "fable": "global.anthropic.claude-fable-5[1m]",
     "fable-5": "global.anthropic.claude-fable-5[1m]",
